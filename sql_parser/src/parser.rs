@@ -228,6 +228,14 @@ fn gen_parser_insert_statement() -> impl Parser<char, Statement, Error = Simple<
         );
     insert_statement
 }
+
+pub fn gen_parser() -> impl Parser<char, Statement, Error = Simple<char>> {
+    gen_parser_create_table_statement()
+        .or(gen_parser_insert_statement())
+        .or(gen_parser_select_statement())
+        .then_ignore(end())
+}
+
 #[cfg(test)]
 mod tests {
 
