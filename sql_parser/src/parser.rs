@@ -36,7 +36,7 @@ pub enum Statement {
     Select {
         table_name: String,
         selectors: Vec<Selector>,
-        where_conditions: Vec<Expr>,
+        where_conditions: Option<Vec<Expr>>,
     },
     CreateTable {
         table_name: String,
@@ -110,7 +110,7 @@ fn gen_parser_expr() -> impl Parser<char, Expr, Error = Simple<char>> {
 
 fn gen_parser_select_statement() -> impl Parser<char, Statement, Error = Simple<char>> {
     let keyword = |s: &'static str| keyword(s).or(keyword(s.to_lowercase())).padded();
-    let selector = keyword("from")
+    let selector = keyword("FROM")
         .not()
         .then(ident().map(|s: String| s))
         .padded()
@@ -139,8 +139,8 @@ fn gen_parser_select_statement() -> impl Parser<char, Statement, Error = Simple<
         .then(selector.repeated())
         .map(|((), selectors)| selectors)
         .then(keyword("FROM"))
-        .then(ident())
-        .then(where_parser)
+        .then(ident().padded())
+        .then(where_parser.or_not())
         .then(just(";").padded().ignored())
         .map(
             |((((selectors, _), table_name), where_conditions), _)| Statement::Select {
@@ -243,6 +243,11 @@ mod tests {
 
     #[test]
     fn test_select_statement() {
+        println!(
+            "{:?}",
+            gen_parser_select_statement()
+                .parse("SELECT name, age, hobby as like, talent FROM user WHERE age = 1;")
+        );
         println!(
             "{:?}",
             gen_parser_select_statement()

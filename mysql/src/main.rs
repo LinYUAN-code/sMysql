@@ -22,7 +22,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let ending = "q".to_string() + line_ending;
-
+    // 可以考虑实现一个StringBuilder
+    let mut user_input_buffer = String::new();
     loop {
         // 读取用户输入
         let mut buffer = String::new();
@@ -31,15 +32,30 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         reader.read_line(&mut buffer)?;
 
         // 移除换行符
-
         if buffer == ending {
             break;
         }
+        user_input_buffer.push_str(buffer.as_str());
+
+        let need_send_command = match user_input_buffer.find(';') {
+            Some(index) => {
+                let command = user_input_buffer.as_str()[0..=index].to_string();
+                user_input_buffer = user_input_buffer.as_str()[(index + 1)..].to_string();
+                Some(command)
+            }
+            None => None,
+        };
+        if let None = need_send_command {
+            continue;
+        }
 
         // 发送消息到服务器
-        stream.write_all(buffer.as_bytes()).await?;
+        stream
+            .write_all(need_send_command.unwrap().as_bytes())
+            .await?;
 
         // 读取服务器的响应
+        // 这里暂时假定服务器只发送<= 1024回来
         let mut response = vec![0; 1024];
         let n = stream.read(&mut response).await?;
         println!("Received: {}", String::from_utf8_lossy(&response[..n]));

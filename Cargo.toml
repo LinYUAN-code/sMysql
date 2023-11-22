@@ -1,2 +1,2 @@
 [workspace]
-members = ["client", "storage", "sql_parser", "mysqld","mysql"]
+members = ["client", "storage", "sql_parser", "mysqld", "mysql"]

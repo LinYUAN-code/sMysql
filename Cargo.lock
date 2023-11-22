@@ -172,6 +172,7 @@ dependencies = [
 name = "mysqld"
 version = "0.1.0"
 dependencies = [
+ "chumsky",
  "sql_parser",
  "tokio",
 ]
